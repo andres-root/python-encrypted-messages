@@ -1,15 +1,28 @@
-
 import os
+from contextlib import contextmanager
 from pathlib import Path
+
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
+
+
+@contextmanager
+def create_key_file(path):
+    try:
+        private_key_file = open(f'{path}/private_key.pem', 'wt')
+        yield
+    except OSError:
+        print('Error creating private key file.')
+    try:
+        public_key_file = open(f'{path}/public_key.pem', 'wt')
+    except OSError:
+        print('Error creating public key file.')
 
 
 def generate_key():
     key = RSA.generate(4096)
     private_key = key.export_key(format='PEM')
     public_key = key.public_key().export_key(format='PEM')
-
 
     # Save private key to file
     with open('private_key.pem', 'wb') as f:
@@ -84,7 +97,7 @@ def decrypt(data_file, private_key_file):
     data = cipher.decrypt_and_verify(encrypted_data, tag)
 
     # save the decrypted data to file
-    [ filename, file_extension ] = data_file.split('.')
+    [filename, file_extension] = data_file.split('.')
     decrypted_file = f'{filename}_decrypted.{file_extension}'
     with open(decrypted_file, 'wb') as f:
         f.write(data)
